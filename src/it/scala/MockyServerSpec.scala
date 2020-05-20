@@ -33,7 +33,7 @@ class MockyServerSpec extends AnyWordSpec with Matchers with OptionValues with E
 
   override def afterStart(): Unit = {
     val config = Config(
-      server = ServerConfig("localhost", serverPort),
+      server = ServerConfig("localhost", serverPort, "localhost"),
       database = DatabaseConfig(
         driver = container.driverClassName,
         url = container.jdbcUrl,

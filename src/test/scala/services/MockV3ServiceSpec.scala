@@ -1,17 +1,17 @@
 package services
 
-import cats.effect.{ ContextShift, IO }
-import fs2.Stream
+import cats.effect.IO
 import io.circe.Json
 import io.circe.literal._
 import io.circe.syntax._
-import models.mocks.actions.{ CreateUpdateMock, DeleteMock }
+import models.mocks.actions.CreateUpdateMock
 import models.mocks.actions.CreateUpdateMock.CreateUpdateMockHeaders
 import models.mocks.feedbacks.MockCreated
+import org.http4s.{ Request, Response, Status, Uri }
 import org.http4s.circe._
 import org.http4s.dsl.io._
 import org.http4s.implicits._
-import org.http4s.{ Request, Response, Status, Uri, _ }
+import cats.implicits._
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.matchers.should.Matchers
 import org.scalatest.wordspec.AnyWordSpec
@@ -23,7 +23,8 @@ class MockV3ServiceSpec extends AnyWordSpec with MockFactory with Matchers {
   implicit val timer = IO.timer(ec)
 
   private val repository = stub[MockV3Repository]
-  private val service = new MockV3Service(repository).routes
+  private val service = new MockV3Service(repository)
+  private val routes = service.apiRoutes <+> service.mockRoutes
 
   "MockV3Service" should {
 
@@ -89,7 +90,7 @@ class MockV3ServiceSpec extends AnyWordSpec with MockFactory with Matchers {
     }
 
     "refuse to update a mock if the secret is invalid an existing mock" in {
-      (repository.delete _).when(id, *).returns(IO.pure(false))
+      (repository.update _).when(id, *).returns(IO.pure(false))
       val response = serve(Request[IO](PUT, Uri.unsafeFromString(s"/api/$id")).withEntity(createJson))
       response.status shouldBe Status.NotFound
     }
@@ -102,6 +103,6 @@ class MockV3ServiceSpec extends AnyWordSpec with MockFactory with Matchers {
   }
 
   private def serve(request: Request[IO]): Response[IO] = {
-    service.orNotFound(request).unsafeRunSync()
+    routes.orNotFound(request).unsafeRunSync()
   }
 }

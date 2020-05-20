@@ -55,6 +55,8 @@ lazy val root = (project in file("."))
     )
   )
 
+enablePlugins(JavaAppPackaging)
+
 // Export Build-info
 lazy val BuildInfo =
   Seq(
