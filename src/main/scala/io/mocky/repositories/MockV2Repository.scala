@@ -7,6 +7,7 @@ import doobie._
 import doobie.implicits._
 import doobie.implicits.javasql._
 import doobie.postgres.circe.jsonb.implicits._
+import doobie.util.log.LogHandler
 
 import io.mocky.http.middleware.Admin
 import io.mocky.models.Gate
@@ -19,6 +20,8 @@ import io.mocky.utils.PostgresUtil
   * Load legacy mocks from PG, that have been migrated from MongoDB
   */
 class MockV2Repository(transactor: Transactor[IO]) {
+
+  implicit val log: LogHandler = LogHandler.jdkLogHandler
 
   private object SQL {
     private val TABLE = Fragment.const("mocks_v2")
@@ -38,7 +41,7 @@ class MockV2Repository(transactor: Transactor[IO]) {
             -1 as nb_mocks_created_in_month,
             SUM(case when last_access_at IS NULL then 1 else 0 end) as nb_mocks_never_accessed,
             SUM(case when last_access_at IS NULL OR  last_access_at < NOW() - INTERVAL '1 YEAR' then 1 else 0 end) as nb_mocks_not_accessed_in_year,
-            -1 as nb_distincts_ips,
+            -1 as nb_distinct_ips,
             ROUND(AVG(OCTET_LENGTH(content))) as mock_average_length
           FROM $TABLE
       """

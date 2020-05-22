@@ -6,6 +6,7 @@
   </appender>
 
   <logger name="io.mocky" level="DEBUG" />
+  <logger name="doobie" level="WARN" />
 
   <root level="INFO">
     <appender-ref ref="STDOUT" />
