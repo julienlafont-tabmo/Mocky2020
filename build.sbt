@@ -3,12 +3,9 @@ import com.typesafe.sbt.packager.MappingsHelper.directory
 
 lazy val root = (project in file("."))
   .settings(
-    inThisBuild(
-      Seq(
-        name := "mocky-2020",
-        scalaVersion := "2.13.2",
-        maintainer := "yotsumi.fx+github@gmail.com"
-      )),
+    name := "mocky-2020",
+    scalaVersion := "2.13.2",
+    maintainer := "yotsumi.fx+github@gmail.com",
     resolvers += Resolver.bintrayRepo("tabmo", "maven"),
     libraryDependencies ++= (http4s ++ circe ++ doobie ++ pureconfig ++ log ++ cache ++ scalatest)
     // Allow to temporary disable Fatal-Warning (can be useful during big refactoring)
