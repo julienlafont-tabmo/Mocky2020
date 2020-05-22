@@ -1,29 +1,31 @@
+import java.time.ZonedDateTime
+import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext
+import scala.concurrent.ExecutionContext.Implicits.global
+import scala.util.Random
+
 import cats.effect.{ ContextShift, IO, Timer }
 import com.dimafeng.testcontainers.{ ForAllTestContainer, PostgreSQLContainer }
-import config.{ Config, DatabaseConfig, ServerConfig }
 import io.circe.Json
-import io.circe.literal._
 import io.circe.optics.JsonPath._
 import org.http4s.circe._
 import org.http4s.client.blaze.BlazeClientBuilder
 import org.http4s.util.{ CaseInsensitiveString => IString }
-import org.http4s.{ Method, Request, Status, Uri }
-import org.scalatest.{ BeforeAndAfterAll, OptionValues }
+import org.http4s.{ Header, Request, Status, Uri }
+import org.scalatest.OptionValues
 import org.scalatest.concurrent.Eventually
 import org.scalatest.matchers.should.Matchers
-import org.scalatest.time.{ Millis, Seconds, Span }
+import org.scalatest.time.{ Seconds, Span }
 import org.scalatest.wordspec.AnyWordSpec
 
-import scala.concurrent.ExecutionContext
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.util.Random
+import io.mocky.HttpServer
+import io.mocky.config._
 
 class MockyServerSpec extends AnyWordSpec with Matchers with OptionValues with Eventually with ForAllTestContainer {
 
   implicit private val timer: Timer[IO] = IO.timer(ExecutionContext.global)
   implicit private val contextShift: ContextShift[IO] = IO.contextShift(ExecutionContext.global)
-  implicit override val patienceConfig: PatienceConfig =
-    PatienceConfig(timeout = scaled(Span(5, Seconds)), interval = scaled(Span(100, Millis)))
+  implicit override val patienceConfig: PatienceConfig = PatienceConfig().copy(timeout = scaled(Span(5, Seconds)))
 
   private lazy val client = BlazeClientBuilder[IO](global).resource
   override val container = PostgreSQLContainer(dockerImageNameOverride = "postgres:12")
@@ -33,12 +35,20 @@ class MockyServerSpec extends AnyWordSpec with Matchers with OptionValues with E
 
   override def afterStart(): Unit = {
     val config = Config(
-      server = ServerConfig("localhost", serverPort, "localhost"),
+      server = ServerConfig("localhost", serverPort),
       database = DatabaseConfig(
         driver = container.driverClassName,
         url = container.jdbcUrl,
         user = container.username,
         password = container.password
+      ),
+      settings = Settings(
+        mock = MockSettings(1000000, 1000),
+        security = SecuritySettings(14),
+        throttle = ThrottleSettings(100, 1.seconds, 10000),
+        sleep = SleepSettings(60.seconds, "mocky-delay"),
+        cors = CorsSettings("mocky.io"),
+        admin = AdminSettings("X-Auth-Token", "secret")
       )
     )
 
@@ -55,6 +65,7 @@ class MockyServerSpec extends AnyWordSpec with Matchers with OptionValues with E
 
     "play an UTF8 mock" in {
       val id = "48e9c41b-de8c-4aeb-99a8-2f3abe3e5efa" // from V003 migration
+
       val request = Request[IO](uri = Uri.unsafeFromString(s"$URL/v3/$id"))
 
       val response = client.use(_.expect[String](request)).unsafeRunSync()
@@ -67,8 +78,6 @@ class MockyServerSpec extends AnyWordSpec with Matchers with OptionValues with E
 
       val status = client.use(_.status(request)).unsafeRunSync()
       status shouldBe Status.Created
-
-      // api get stats count call
     }
 
     "play an ISO-8859-1 mock" in {
@@ -87,93 +96,50 @@ class MockyServerSpec extends AnyWordSpec with Matchers with OptionValues with E
       status shouldBe Status.Ok
     }
 
-    /*"update a todo" in {
-      val id = createTodo("my todo 2", "low")
+    "stats must be updated after each play" in {
+      val id = "c7b8ba84-19da-4f51-bbca-25ef1e4bb3da" // from V003 migration
+      val call = Request[IO](uri = Uri.unsafeFromString(s"$URL/v3/$id"))
 
-      val description = "updated todo"
-      val importance = "medium"
-      val updateJson = json"""
-        {
-          "description": $description,
-          "importance": $importance
-        }"""
-      val request =
-        Request[IO](method = Method.PUT, uri = Uri.unsafeFromString(s"$urlStart/todos/$id")).withEntity(updateJson)
-      client.use(_.expect[Json](request)).unsafeRunSync() shouldBe json"""
-        {
-          "id": $id,
-          "description": $description,
-          "importance": $importance
-        }"""
+      // Call the mock multiple times
+      val nbCalls = 35
+      0.until(nbCalls).foreach(_ => client.use(_.expect[String](call)).unsafeRunSync())
+
+      val requestStats = Request[IO](uri = Uri.unsafeFromString(s"$URL/api/$id/stats"))
+      val stats = client.use(_.expect[Json](requestStats)).unsafeRunSync()
+
+      val totalAccess = root.totalAccess.int.getOption(stats).value
+      val lastAccessAt = root.lastAccessAt.as[ZonedDateTime].getOption(stats).value
+
+      val initialCounter = 1000 // from SQL migration
+      totalAccess shouldBe initialCounter + nbCalls
+
+      lastAccessAt.isAfter(ZonedDateTime.now().minusSeconds(20)) shouldBe true
+      lastAccessAt.isBefore(ZonedDateTime.now()) shouldBe true
     }
 
-    "return a single todo" in {
-      val description = "my todo 3"
-      val importance = "medium"
-      val id = createTodo(description, importance)
-      client.use(_.expect[Json](Uri.unsafeFromString(s"$urlStart/todos/$id"))).unsafeRunSync() shouldBe json"""
-        {
-          "id": $id,
-          "description": $description,
-          "importance": $importance
-        }"""
+    "refuse access to Admin route without token" in {
+      val request = Request[IO](uri = Uri.unsafeFromString(s"$URL/api/admin/stats"))
+
+      val status = client.use(_.status(request)).unsafeRunSync()
+      status shouldBe Status.Unauthorized
     }
 
-    "delete a todo" in {
-      val description = "my todo 4"
-      val importance = "low"
-      val id = createTodo(description, importance)
-      val deleteRequest = Request[IO](method = Method.DELETE, uri = Uri.unsafeFromString(s"$urlStart/todos/$id"))
-      client.use(_.status(deleteRequest)).unsafeRunSync() shouldBe Status.NoContent
+    "refuse access to Admin route with wrong token" in {
+      val request = Request[IO](uri = Uri.unsafeFromString(s"$URL/api/admin/stats"))
+        .withHeaders(Header("X-Auth-Token", "wrongsecret"))
 
-      val getRequest = Request[IO](method = Method.GET, uri = Uri.unsafeFromString(s"$urlStart/todos/$id"))
-      client.use(_.status(getRequest)).unsafeRunSync() shouldBe Status.NotFound
+      val status = client.use(_.status(request)).unsafeRunSync()
+      status shouldBe Status.Forbidden
     }
 
-    "return all todos" in {
-      // Remove all existing todos
-      val json = client.use(_.expect[Json](Uri.unsafeFromString(s"$urlStart/todos"))).unsafeRunSync()
-      root.each.id.long.getAll(json).foreach { id =>
-        val deleteRequest = Request[IO](method = Method.DELETE, uri = Uri.unsafeFromString(s"$urlStart/todos/$id"))
-        client.use(_.status(deleteRequest)).unsafeRunSync() shouldBe Status.NoContent
-      }
+    "authorize access to Admin route with the right token" in {
+      val request = Request[IO](uri = Uri.unsafeFromString(s"$URL/api/admin/stats"))
+        .withHeaders(Header("X-Auth-Token", "secret"))
 
-      // Add new todos
-      val description1 = "my todo 1"
-      val description2 = "my todo 2"
-      val importance1 = "high"
-      val importance2 = "low"
-      val id1 = createTodo(description1, importance1)
-      val id2 = createTodo(description2, importance2)
-
-      // Retrieve todos
-      client.use(_.expect[Json](Uri.unsafeFromString(s"$urlStart/todos"))).unsafeRunSync shouldBe json"""
-        [
-          {
-            "id": $id1,
-            "description": $description1,
-            "importance": $importance1
-          },
-          {
-            "id": $id2,
-            "description": $description2,
-            "importance": $importance2
-          }
-        ]"""
+      val status = client.use(_.status(request)).unsafeRunSync()
+      status shouldBe Status.Ok
     }
-     */
+
   }
 
-  private def createTodo(description: String, importance: String): Long = {
-    val createJson = json"""
-      {
-        "description": $description,
-        "importance": $importance
-      }"""
-    val request =
-      Request[IO](method = Method.POST, uri = Uri.unsafeFromString(s"$URL/todos")).withEntity(createJson)
-    val json = client.use(_.expect[Json](request)).unsafeRunSync()
-    root.id.long.getOption(json).nonEmpty shouldBe true
-    root.id.long.getOption(json).get
-  }
 }
