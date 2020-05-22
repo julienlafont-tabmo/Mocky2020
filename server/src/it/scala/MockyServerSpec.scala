@@ -118,14 +118,14 @@ class MockyServerSpec extends AnyWordSpec with Matchers with OptionValues with E
     }
 
     "refuse access to Admin route without token" in {
-      val request = Request[IO](uri = Uri.unsafeFromString(s"$URL/api/admin/stats"))
+      val request = Request[IO](uri = Uri.unsafeFromString(s"$URL/admin/api/stats"))
 
       val status = client.use(_.status(request)).unsafeRunSync()
       status shouldBe Status.Unauthorized
     }
 
     "refuse access to Admin route with wrong token" in {
-      val request = Request[IO](uri = Uri.unsafeFromString(s"$URL/api/admin/stats"))
+      val request = Request[IO](uri = Uri.unsafeFromString(s"$URL/admin/api/stats"))
         .withHeaders(Header("X-Auth-Token", "wrongsecret"))
 
       val status = client.use(_.status(request)).unsafeRunSync()
@@ -133,7 +133,7 @@ class MockyServerSpec extends AnyWordSpec with Matchers with OptionValues with E
     }
 
     "authorize access to Admin route with the right token" in {
-      val request = Request[IO](uri = Uri.unsafeFromString(s"$URL/api/admin/stats"))
+      val request = Request[IO](uri = Uri.unsafeFromString(s"$URL/admin/api/stats"))
         .withHeaders(Header("X-Auth-Token", "secret"))
 
       val status = client.use(_.status(request)).unsafeRunSync()
