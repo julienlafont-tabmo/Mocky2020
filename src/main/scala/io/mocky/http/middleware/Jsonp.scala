@@ -12,7 +12,7 @@ import org.http4s.headers._
 
 /**
   * Middleware to support wrapping json responses in jsonp.
-  * Implementation based on [[org.http4s.server.middleware.Jsonp]], with relaxed constraint:
+  * Implementation based on `org.http4s.server.middleware.Jsonp`, with relaxed constraint:
   * the original content-type hasn't to be `application/json`, it'll be overridden if required.
   *
   * If the wrapping is done, the response Content-Type is changed into `application/javascript`

@@ -16,8 +16,8 @@ import io.mocky.utils.HttpUtil
 
 /**
   * Middleware to support wrapping json responses in jsonp.
-  * Implementation based on [[org.http4s.server.middleware.Jsonp]], with relaxed constraint:
-  * the original content-type hasn't to be `application/json`, it'll be overridden if required.
+  * Implementation based on `org.http4s.server.middleware.Jsonp`, with relaxed constraint:
+  * the original content-type hasn't to be application/json`, it'll be overridden if required.
   *
   * If the wrapping is done, the response Content-Type is changed into `application/javascript`
   * and the appropriate jsonp callback is applied.
@@ -29,7 +29,7 @@ object IPThrottler {
   final case class TokenUnavailable(retryAfter: Option[FiniteDuration]) extends TokenAvailability
 
   /**
-    * A token bucket for use with the [[org.http4s.server.middleware.Throttle]] middleware.
+    * A token bucket for use with the `org.http4s.server.middleware.Throttle` middleware.
     * Consumers can take tokens which will be refilled over time.
     * Implementations are required to provide their own refill mechanism.
     *
@@ -42,11 +42,11 @@ object IPThrottler {
   private object TokenBucket {
 
     /**
-      * Creates an in-memory [[TokenBucket]].
+      * Creates an in-memory `TokenBucket`.
       *
       * @param capacity the number of tokens the bucket can hold and starts with.
       * @param refillEvery the frequency with which to add another token if there is capacity spare.
-      * @return A task to create the [[TokenBucket]].
+      * @return A task to create the `TokenBucket`.
       */
     def local(capacity: Int, refillEvery: FiniteDuration, maxClients: Long)(implicit
       F: Sync[IO],
@@ -99,7 +99,7 @@ object IPThrottler {
   }
 
   /**
-    * Limits the supplied service to a given rate of calls using an in-memory [[TokenBucket]]
+    * Limits the supplied service to a given rate of calls using an in-memory `TokenBucket`
     *
     * @param amount the number of calls to the service to permit within the given time period.
     * @param per the time period over which a given number of calls is permitted.
@@ -127,9 +127,9 @@ object IPThrottler {
   }
 
   /**
-    * Limits the supplied service using a provided [[TokenBucket]]
+    * Limits the supplied service using a provided `TokenBucket`
     *
-    * @param bucket a [[TokenBucket]] to use to track the rate of incoming requests.
+    * @param bucket a `TokenBucket` to use to track the rate of incoming requests.
     * @param http the service to transform.
     * @return a task containing the transformed service.
     */

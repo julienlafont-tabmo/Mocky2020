@@ -61,7 +61,7 @@ class MockV2Repository(transactor: Transactor[IO]) {
 
   /**
     * Return some global statistics about V3 mocks
-    * @admin Gate to restrict this  action to admin only
+    * @param admin Gate to restrict this  action to admin only
     */
   def adminStats()(implicit @nowarn admin: Gate[Admin.type]): IO[Stats] = {
     SQL.ADMIN_STATS.query[Stats].unique.transact(transactor)

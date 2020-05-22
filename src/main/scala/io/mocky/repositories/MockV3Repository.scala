@@ -159,8 +159,8 @@ class MockV3Repository(transactor: Transactor[IO], securityConfig: SecuritySetti
 
   /**
     * Delete a mock without its secret, restricted to admin users
-    * @id Mock to delete
-    * @admin Gate to restrict this  action to admin only
+    * @param id Mock to delete
+    * @param admin Gate to restrict this  action to admin only
     * @return true if one mock have been deleted
     */
   def adminDelete(id: UUID)(implicit @nowarn admin: Gate[Admin.type]): IO[Boolean] = {
@@ -169,7 +169,7 @@ class MockV3Repository(transactor: Transactor[IO], securityConfig: SecuritySetti
 
   /**
     * Return some global statistics about V3 mocks
-    * @admin Gate to restrict this  action to admin only
+    * @param admin Gate to restrict this  action to admin only
     */
   def adminStats()(implicit @nowarn admin: Gate[Admin.type]): IO[Stats] = {
     SQL.ADMIN_STATS.query[Stats].unique.transact(transactor)

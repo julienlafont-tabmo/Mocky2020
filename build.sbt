@@ -6,7 +6,8 @@ lazy val root = (project in file("."))
     inThisBuild(
       Seq(
         name := "mocky-2020",
-        scalaVersion := "2.13.2"
+        scalaVersion := "2.13.2",
+        maintainer := "yotsumi.fx+github@gmail.com"
       )),
     resolvers += Resolver.bintrayRepo("tabmo", "maven"),
     libraryDependencies ++= (http4s ++ circe ++ doobie ++ pureconfig ++ log ++ cache ++ scalatest)
@@ -29,19 +30,16 @@ lazy val root = (project in file("."))
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
+// SBT-Release process
 import ReleaseTransformations._
-
-// ...
-
 releaseProcess := Seq[ReleaseStep](
-  checkSnapshotDependencies, // : ReleaseStep
-  inquireVersions, // : ReleaseStep
-  runClean, // : ReleaseStep
-  runTest, // : ReleaseStep
-  setReleaseVersion, // : ReleaseStep
-  commitReleaseVersion, // : ReleaseStep, performs the initial git checks
-  tagRelease, // : ReleaseStep
-  setNextVersion, // : ReleaseStep
-  commitNextVersion, // : ReleaseStep
-  pushChanges // : ReleaseStep, also checks that an upstream branch is properly configured
+  checkSnapshotDependencies,
+  inquireVersions,
+  runClean,
+  runTest,
+  setReleaseVersion,
+  commitReleaseVersion,
+  setNextVersion,
+  commitNextVersion,
+  pushChanges
 )
