@@ -36,6 +36,7 @@ releaseProcess := Seq[ReleaseStep](
   runTest,
   setReleaseVersion,
   commitReleaseVersion,
+  tagRelease,
   setNextVersion,
   commitNextVersion,
   pushChanges
