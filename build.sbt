@@ -6,7 +6,6 @@ lazy val root = (project in file("."))
     inThisBuild(
       Seq(
         name := "mocky-2020",
-        version := "1.0.0-SNAPSHOT",
         scalaVersion := "2.13.2"
       )),
     resolvers += Resolver.bintrayRepo("tabmo", "maven"),
@@ -29,3 +28,20 @@ lazy val root = (project in file("."))
   .settings(Defaults.itSettings) // Allows to run it:xxx tasks
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
+
+import ReleaseTransformations._
+
+// ...
+
+releaseProcess := Seq[ReleaseStep](
+  checkSnapshotDependencies, // : ReleaseStep
+  inquireVersions, // : ReleaseStep
+  runClean, // : ReleaseStep
+  runTest, // : ReleaseStep
+  setReleaseVersion, // : ReleaseStep
+  commitReleaseVersion, // : ReleaseStep, performs the initial git checks
+  tagRelease, // : ReleaseStep
+  setNextVersion, // : ReleaseStep
+  commitNextVersion, // : ReleaseStep
+  pushChanges // : ReleaseStep, also checks that an upstream branch is properly configured
+)
