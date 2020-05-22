@@ -25,10 +25,10 @@ jobs:
         source: "target/universal/mocky-2020*.zip"
         target: "target/universal/mocky.zip"
     - name: 'Get Previous tag'
-        id: previoustag
-        uses: "WyriHaximus/github-action-get-previous-tag@master"
-        env:
-          GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
+      id: previoustag
+      uses: "WyriHaximus/github-action-get-previous-tag@master"
+      env:
+        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
