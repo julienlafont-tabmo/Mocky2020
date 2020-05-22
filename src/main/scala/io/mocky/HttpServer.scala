@@ -49,8 +49,8 @@ object HttpServer {
           .withHttpApp(routing)
           .serve
           .compile
-          .lastOrError
-
+          .drain
+          .as(ExitCode.Success)
     } yield exitCode
   }
 

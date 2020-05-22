@@ -22,7 +22,7 @@ class MockAdminApiService(repoV2: MockV2Repository, repoV3: MockV3Repository, se
   private def routes: AuthedRoutes[Role, IO] = AuthedRoutes.of[Role, IO] {
 
     // Delete an existing mock
-    case DELETE -> Root / "api" / "admin" / UUIDVar(id) as (user: Admin.type) =>
+    case DELETE -> Root / "api" / UUIDVar(id) as (user: Admin.type) =>
       implicit val adminGate = Gate(user)
       for {
         deleted <- repoV3.adminDelete(id)
@@ -30,7 +30,7 @@ class MockAdminApiService(repoV2: MockV2Repository, repoV3: MockV3Repository, se
       } yield response
 
     // Fetch global statistics
-    case GET -> Root / "api" / "admin" / "stats" as (user: Admin.type) =>
+    case GET -> Root / "api" / "stats" as (user: Admin.type) =>
       implicit val adminGate = Gate(user)
       for {
         statsV2 <- repoV2.adminStats()

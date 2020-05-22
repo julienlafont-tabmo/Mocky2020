@@ -4,12 +4,13 @@ import cats.effect.{ ContextShift, IO, Timer }
 import cats.implicits._
 import org.http4s.Http
 import org.http4s.implicits._
+import org.http4s.server.Router
 
 import io.mocky.HttpServer.Resources
 import io.mocky.config.ThrottleSettings
 import io.mocky.http.middleware.IPThrottler
 import io.mocky.repositories.{ MockV2Repository, MockV3Repository }
-import io.mocky.services.{ MockAdminApiService, MockApiService, MockRunnerService, StatusService }
+import io.mocky.services._
 
 class Routing {
 
@@ -35,8 +36,13 @@ class Routing {
     throttleConfig: ThrottleSettings)(implicit timer: Timer[IO], contextShift: ContextShift[IO]): Http[IO, IO] = {
 
     val mockRoutes = mockRunnerService.routing
-    val apiRoutes = statusService.routes <+> mockApiService.routing <+> mockAdminApiService.routing
-    val allRoutes = (mockRoutes <+> apiRoutes).orNotFound
+    val apiRoutes = statusService.routes <+> mockApiService.routing
+    val adminRoutes = mockAdminApiService.routing
+
+    val allRoutes = Router(
+      "/admin" -> adminRoutes,
+      "/" -> (mockRoutes <+> apiRoutes)
+    ).orNotFound
 
     val throttledRoutes = IPThrottler(throttleConfig)(allRoutes)
 

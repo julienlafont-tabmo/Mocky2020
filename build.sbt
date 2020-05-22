@@ -7,7 +7,9 @@ lazy val root = (project in file("."))
     scalaVersion := "2.13.2",
     maintainer := "yotsumi.fx+github@gmail.com",
     resolvers += Resolver.bintrayRepo("tabmo", "maven"),
-    libraryDependencies ++= (http4s ++ circe ++ doobie ++ pureconfig ++ log ++ cache ++ scalatest)
+    libraryDependencies ++= (http4s ++ circe ++ doobie ++ pureconfig ++ log ++ cache ++ scalatest),
+    addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3"),
+    addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1")
     // Allow to temporary disable Fatal-Warning (can be useful during big refactoring)
     //scalacOptions -= "-Xfatal-warnings"
   )
@@ -23,10 +25,11 @@ lazy val root = (project in file("."))
     ))
   // Activate Integration Tests
   .configs(IntegrationTest) // Affect the same settings to integration test module
-  .settings(Defaults.itSettings) // Allows to run it:xxx tasks
+  .settings(Defaults.itSettings) // Allows to run it: tasks
 
+// Automatically reload project when build files are modified
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
-// SBT-Release process (gitflow)
+// Customize the sbt-release steps to follow gitflow process
 releaseProcess := SbtReleaseProcess.steps
 releaseIgnoreUntrackedFiles := true

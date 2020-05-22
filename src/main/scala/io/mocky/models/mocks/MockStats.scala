@@ -6,7 +6,7 @@ import java.time.{ ZoneId, ZonedDateTime }
 import io.circe.Encoder
 import io.circe.generic.semiauto._
 
-final case class MockStats(createdAt: Timestamp, lastAccessAt: Timestamp, totalAccess: Long)
+final case class MockStats(createdAt: Timestamp, lastAccessAt: Option[Timestamp], totalAccess: Long)
 
 object MockStats {
   implicit val timestampEncoder: Encoder[Timestamp] =
