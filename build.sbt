@@ -27,17 +27,6 @@ lazy val root = (project in file("."))
 
 Global / onChangedBuildSource := ReloadOnSourceChanges
 
-// SBT-Release process
-import ReleaseTransformations._
-releaseProcess := Seq[ReleaseStep](
-  checkSnapshotDependencies,
-  inquireVersions,
-  runClean,
-  runTest,
-  setReleaseVersion,
-  tagRelease,
-  setNextVersion,
-  commitReleaseVersion,
-  //commitNextVersion,
-  pushChanges
-)
+// SBT-Release process (gitflow)
+releaseProcess := SbtReleaseProcess.steps
+releaseIgnoreUntrackedFiles := true
