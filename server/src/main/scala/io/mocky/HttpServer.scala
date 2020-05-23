@@ -6,17 +6,23 @@ import cats.effect._
 import doobie.hikari.HikariTransactor
 import doobie.util.ExecutionContexts
 import org.http4s.server.blaze.BlazeServerBuilder
+import org.log4s._
 
 import io.mocky.config.Config
 import io.mocky.db.Database
 
 object HttpServer {
-  def create(configFile: String = "application.conf")(implicit
+  private val logger = getLogger
+
+  def create(configFile: String)(implicit
     contextShift: ContextShift[IO],
     concurrentEffect: ConcurrentEffect[IO],
     timer: Timer[IO]): IO[ExitCode] = {
 
-    Config.load(configFile).flatMap(config => resources(config)).use(create)
+    Config.load(configFile).flatMap { config =>
+      logger.info(s"Start app with $configFile: $config")
+      resources(config)
+    }.use(create)
   }
 
   def createFromConfig(config: Config)(implicit

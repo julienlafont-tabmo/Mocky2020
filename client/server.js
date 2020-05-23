@@ -1,7 +1,8 @@
-var express = require("express");
-var app = express();
-var history = require("connect-history-api-fallback");
-var enforce = require('express-sslify');
+const express = require('express');
+const history = require('connect-history-api-fallback');
+const enforce = require('express-sslify');
+
+const app = express();
 
 // allow to call history-mode route
 app.use(history());
@@ -10,10 +11,8 @@ app.use(history());
 app.use(enforce.HTTPS({ trustProtoHeader: true }));
 
 // Serve all the files in '/build' directory
-app.use(express.static("build"));
+app.use(express.static('build'));
 
-app.listen(process.env.PORT, "0.0.0.0", function() {
-  console.info(`Mocky is running on port ${process.env.PORT}`);
+app.listen(process.env.PORT, '0.0.0.0', () => {
+  console.log(`Mocky is running on port ${process.env.PORT}`); // eslint-disable-line no-console
 });
-
-
