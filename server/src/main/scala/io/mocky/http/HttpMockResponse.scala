@@ -32,7 +32,11 @@ trait HttpMockResponse extends Http4sDsl[IO] {
   }
 
   private def prepareEntity(mock: MockResponse): Entity[IO] = {
-    EntityEncoder.byteArrayEncoder[IO].toEntity(mock.content)
+    mock.content match {
+      case Some(content) => EntityEncoder.byteArrayEncoder[IO].toEntity(content)
+      case None => Entity.empty
+    }
+
   }
 
   private def prepareHeaders(mock: MockResponse, entity: Entity[IO]): Headers = {

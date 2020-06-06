@@ -1,7 +1,7 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 
-const Page500 = () => (
+export default () => (
   <section className="height-100 bg--dark text-center">
     <div className="container pos-vertical-center">
       <div className="row">
@@ -14,5 +14,3 @@ const Page500 = () => (
     </div>
   </section>
 );
-
-export default Page500;

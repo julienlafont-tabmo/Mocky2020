@@ -28,6 +28,7 @@ CREATE TABLE mocks_v3
 (
     id UUID NOT NULL DEFAULT uuid_generate_v4 (),
 
+    name character varying,
     content bytea,
     hash_content character varying,
 
@@ -41,6 +42,7 @@ CREATE TABLE mocks_v3
 
     created_at timestamp with time zone,
     last_access_at timestamp with time zone,
+    expire_at timestamp with time zone,
 
     total_access bigint NOT NULL,
 

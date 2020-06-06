@@ -1,5 +1,5 @@
 import React, { Component, ErrorInfo } from 'react';
-import Page500 from '../../routes/Page500';
+import Page500 from '../../modules/routing/Page500';
 
 type ErrorBoundaryState = {
   hasError: Boolean;

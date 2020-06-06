@@ -7,7 +7,7 @@ lazy val root = (project in file("."))
     scalaVersion := "2.13.2",
     maintainer := "yotsumi.fx+github@gmail.com",
     resolvers += Resolver.bintrayRepo("tabmo", "maven"),
-    libraryDependencies ++= (http4s ++ circe ++ doobie ++ pureconfig ++ log ++ cache ++ scalatest),
+    libraryDependencies ++= (http4s ++ circe ++ doobie ++ pureconfig ++ log ++ cache ++ enumeratum ++ scalatest),
     addCompilerPlugin("org.typelevel" %% "kind-projector" % "0.10.3"),
     addCompilerPlugin("com.olegpy" %% "better-monadic-for" % "0.3.1")
     // Allow to temporary disable Fatal-Warning (can be useful during big refactoring)
@@ -18,11 +18,10 @@ lazy val root = (project in file("."))
   .settings(mappings in Universal ++= directory("src/main/resources"))
   // Make build information available at runtime
   .enablePlugins(BuildInfoPlugin)
-  .settings(
-    Seq(
-      buildInfoKeys := Seq[BuildInfoKey](name, version),
-      buildInfoOptions += BuildInfoOption.BuildTime
-    ))
+  .settings(Seq(
+    buildInfoKeys := Seq[BuildInfoKey](name, version),
+    buildInfoOptions += BuildInfoOption.BuildTime
+  ))
   // Activate Integration Tests
   .configs(IntegrationTest) // Affect the same settings to integration test module
   .settings(Defaults.itSettings) // Allows to run it: tasks

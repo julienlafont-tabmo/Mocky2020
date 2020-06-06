@@ -43,6 +43,8 @@ class MockyServerSpec extends AnyWordSpec with Matchers with OptionValues with E
         password = container.password
       ),
       settings = Settings(
+        environment = "dev",
+        endpoint = "https://mocky.io",
         mock = MockSettings(1000000, 1000),
         security = SecuritySettings(14),
         throttle = ThrottleSettings(100, 1.seconds, 10000),
@@ -104,7 +106,7 @@ class MockyServerSpec extends AnyWordSpec with Matchers with OptionValues with E
       val nbCalls = 35
       0.until(nbCalls).foreach(_ => client.use(_.expect[String](call)).unsafeRunSync())
 
-      val requestStats = Request[IO](uri = Uri.unsafeFromString(s"$URL/api/$id/stats"))
+      val requestStats = Request[IO](uri = Uri.unsafeFromString(s"$URL/api/mock/$id/stats"))
       val stats = client.use(_.expect[Json](requestStats)).unsafeRunSync()
 
       val totalAccess = root.totalAccess.int.getOption(stats).value

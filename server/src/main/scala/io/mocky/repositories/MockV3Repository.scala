@@ -19,7 +19,7 @@ import io.mocky.models.errors.MockNotFoundError
 import io.mocky.models.mocks._
 import io.mocky.models.mocks.actions.{ CreateUpdateMock, DeleteMock }
 import io.mocky.models.mocks.feedbacks.MockCreated
-import io.mocky.utils.PostgresUtil
+import io.mocky.utils.DateUtil
 
 class MockV3Repository(transactor: Transactor[IO], securityConfig: SecuritySettings) {
 
@@ -30,7 +30,9 @@ class MockV3Repository(transactor: Transactor[IO], securityConfig: SecuritySetti
     // Higher iterations make the crypt method slower but more secure to brute force attack
     private val BCRYPT_ITER = Fragment.const(securityConfig.bcryptIterations.toString)
 
-    private def encode(content: String) = fr"encode(digest($content, 'sha256'), 'hex')"
+    private def encode(str: String): Fragment = fr"encode(digest($str, 'sha256'), 'hex')"
+    private def encode(optStr: Option[String]): Fragment = optStr.map(encode).getOrElse(fr"null")
+
     private def checkSecret(secret: String) = fr"secret_token = crypt($secret, secret_token)"
 
     def GET(id: UUID): Fragment =
@@ -40,19 +42,21 @@ class MockV3Repository(transactor: Transactor[IO], securityConfig: SecuritySetti
       fr"SELECT created_at, last_access_at, total_access FROM $TABLE WHERE id = $id"
 
     def UPDATE_STATS(id: UUID): Fragment =
-      fr"UPDATE $TABLE SET last_access_at = ${PostgresUtil.now}, total_access = total_access + 1 WHERE id = $id"
+      fr"UPDATE $TABLE SET last_access_at = ${DateUtil.now}, total_access = total_access + 1 WHERE id = $id"
 
     def INSERT(mock: CreateUpdateMock): Fragment =
       fr"""
           INSERT INTO $TABLE
-            (content, content_type, status, charset, headers, created_at, total_access, hash_content, secret_token, hash_ip)
+            (name, content, content_type, status, charset, headers, created_at, expire_at, total_access, hash_content, secret_token, hash_ip)
           VALUES (
+            ${mock.name},
             ${mock.contentArrayBytes},
             ${mock.contentType},
             ${mock.status},
             ${mock.charset},
             ${mock.headersJson},
-            ${PostgresUtil.now},
+            ${DateUtil.now},
+            ${mock.expireAt.map(DateUtil.toTimestamp)},
             0,
             ${encode(mock.content)},
             crypt(${mock.secret}, gen_salt('bf', $BCRYPT_ITER)),
@@ -64,18 +68,23 @@ class MockV3Repository(transactor: Transactor[IO], securityConfig: SecuritySetti
       fr"""
           UPDATE $TABLE
           SET
+            name = ${mock.name},
             content = ${mock.contentArrayBytes},
             content_type = ${mock.contentType},
             status = ${mock.status},
             charset = ${mock.charset},
             headers = ${mock.headersJson},
             hash_content = ${encode(mock.content)},
-            hash_ip = ${encode(mock.ip.getOrElse("0.0.0.0"))}
+            hash_ip = ${encode(mock.ip.getOrElse("0.0.0.0"))},
+            expire_at = ${mock.expireAt.map(DateUtil.toTimestamp)}
           WHERE id = $id AND ${checkSecret(mock.secret)}
       """
 
     def DELETE(id: UUID, secret: String): Fragment =
       fr"DELETE FROM $TABLE WHERE id = $id and ${checkSecret(secret)}"
+
+    def CHECK_SECRET(id: UUID, secret: String): Fragment =
+      fr"SELECT true FROM $TABLE WHERE id = $id and ${checkSecret(secret)}"
 
     def ADMIN_DELETE(id: UUID): Fragment =
       fr"DELETE FROM $TABLE WHERE id = $id"
@@ -173,6 +182,13 @@ class MockV3Repository(transactor: Transactor[IO], securityConfig: SecuritySetti
     */
   def adminStats()(implicit @nowarn admin: Gate[Admin.type]): IO[Stats] = {
     SQL.ADMIN_STATS.query[Stats].unique.transact(transactor)
+  }
+
+  /**
+    * Check if the current mock can be updated/deleted with this id/secret
+    */
+  def checkDeletionSecret(id: UUID, payload: DeleteMock): IO[Boolean] = {
+    SQL.CHECK_SECRET(id, payload.secret).query[Boolean].option.transact(transactor).map(_.getOrElse(false))
   }
 
 }

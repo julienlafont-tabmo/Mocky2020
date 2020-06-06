@@ -33,7 +33,7 @@ class MockRunnerServiceSpec extends AnyWordSpec with MockFactory with Matchers {
     val content = json"""{"hello":"world"}""".noSpaces
     val header = Header("X-Foo-Bar", "HelloWorld")
     val mock = MockResponse(
-      content = content.getBytes(MockResponse.DEFAULT_CHARSET.nioCharset),
+      content = Some(content.getBytes(MockResponse.DEFAULT_CHARSET.nioCharset)),
       charset = MockResponse.DEFAULT_CHARSET,
       status = Status.Created,
       contentType = MockResponse.DEFAULT_CONTENT_TYPE.withCharset(MockResponse.DEFAULT_CHARSET),

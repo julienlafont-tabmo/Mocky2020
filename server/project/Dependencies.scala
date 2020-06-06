@@ -15,6 +15,7 @@ object Dependencies {
     val ScalaMockV = "4.4.0"
     val Slf4jV = "1.7.30"
     val TestContainerV = "0.37.0"
+    val EnumeratumV = "1.6.1"
   }
 
   import Versions._
@@ -38,7 +39,7 @@ object Dependencies {
   val circe = Seq(
     "io.circe" %% "circe-generic" % CirceV,
     "io.circe" %% "circe-literal" % CirceV % "it,test",
-    "io.circe" %% "circe-optics" % CirceV % IntegrationTest,
+    "io.circe" %% "circe-optics" % CirceV % "it,test",
     "io.tabmo" %% "circe-validation-core" % CirceValidationV,
     "io.tabmo" %% "circe-validation-extra-rules" % CirceValidationV
   )
@@ -62,6 +63,11 @@ object Dependencies {
 
   val cache = Seq(
     "com.github.blemale" %% "scaffeine" % "4.0.0" % Compile
+  )
+
+  val enumeratum = Seq(
+    "com.beachape" %% "enumeratum" % EnumeratumV,
+    "com.beachape" %% "enumeratum-circe" % EnumeratumV
   )
 
 }

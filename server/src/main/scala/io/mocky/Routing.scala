@@ -21,11 +21,12 @@ class Routing {
     val mockApiService = new MockApiService(repositoryV3, resources.config.settings)
     val mockAdminApiService = new MockAdminApiService(repositoryV2, repositoryV3, resources.config.settings)
     val mockRunnerService = new MockRunnerService(repositoryV2, repositoryV3, resources.config.settings)
+    val designerService = new DesignerService(resources.config.settings.cors)
     val statusService = new StatusService()
 
     val throttleConfig = resources.config.settings.throttle
 
-    routes(mockApiService, mockAdminApiService, mockRunnerService, statusService, throttleConfig)
+    routes(mockApiService, mockAdminApiService, mockRunnerService, statusService, designerService, throttleConfig)
   }
 
   def routes(
@@ -33,15 +34,17 @@ class Routing {
     mockAdminApiService: MockAdminApiService,
     mockRunnerService: MockRunnerService,
     statusService: StatusService,
+    designerService: DesignerService,
     throttleConfig: ThrottleSettings)(implicit timer: Timer[IO], contextShift: ContextShift[IO]): Http[IO, IO] = {
 
     val mockRoutes = mockRunnerService.routing
     val apiRoutes = statusService.routes <+> mockApiService.routing
+    val designerRoutes = designerService.routes
     val adminRoutes = mockAdminApiService.routing
 
     val allRoutes = Router(
       "/admin" -> adminRoutes,
-      "/" -> (mockRoutes <+> apiRoutes)
+      "/" -> (designerRoutes <+> mockRoutes <+> apiRoutes)
     ).orNotFound
 
     val throttledRoutes = IPThrottler(throttleConfig)(allRoutes)

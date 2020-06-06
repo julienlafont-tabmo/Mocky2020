@@ -16,4 +16,4 @@ curl -X PUT \
          \"X-BAR\": \"foo\"
        }
      }" \
-  "http://localhost:8080/api/$id" -v
+  "http://localhost:8080/api/mock/$id" -v

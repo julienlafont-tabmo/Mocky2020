@@ -5,7 +5,7 @@ import org.http4s._
 import org.http4s.headers.`Content-Type`
 
 final case class MockResponse(
-  content: Array[Byte],
+  content: Option[Array[Byte]],
   charset: Charset,
   status: Status,
   contentType: `Content-Type`,

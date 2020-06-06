@@ -13,4 +13,4 @@ curl -X POST \
          "X-BAR": "foo"
        }
      }' \
-  "http://localhost:8080/api"
+  "http://localhost:8080/api/mock"

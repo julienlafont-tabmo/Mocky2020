@@ -2,4 +2,4 @@
 
 id="$1"
 
-curl "http://localhost:8080/api/$id" -v
+curl "http://localhost:8080/api/mock/$id" -v

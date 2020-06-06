@@ -1,17 +1,20 @@
+import './index.css';
+
 import * as React from 'react';
 import ReactDOM from 'react-dom';
-import './index.css';
-import App from './components/App/App';
-import { store } from './app/store';
 import { Provider } from 'react-redux';
+
+import Routing from './modules/routing/Routing';
+import { store } from './redux/store';
 import * as serviceWorker from './serviceWorker';
+import GA from './services/Analytics/GA';
+
+GA.initialize();
 
 ReactDOM.render(
-  <React.StrictMode>
-    <Provider store={store}>
-      <App />
-    </Provider>
-  </React.StrictMode>,
+  <Provider store={store}>
+    <Routing />
+  </Provider>,
   document.getElementById('root')
 );
 

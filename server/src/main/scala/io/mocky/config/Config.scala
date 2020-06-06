@@ -31,7 +31,7 @@ sealed case class MockSettings(
 }
 
 sealed case class SecuritySettings(bcryptIterations: Int) {
-  assert(bcryptIterations >= 5 && bcryptIterations <= 31)
+  assert(bcryptIterations >= 4 && bcryptIterations <= 31)
 }
 
 sealed case class AdminSettings(header: String, password: String) {
@@ -39,11 +39,13 @@ sealed case class AdminSettings(header: String, password: String) {
   assert(password.nonEmpty)
 }
 
-sealed case class CorsSettings(domain: String) {
+sealed case class CorsSettings(domain: String, devDomains: Option[Seq[String]] = None) {
   assert(domain.nonEmpty)
 }
 
 sealed case class Settings(
+  environment: String,
+  endpoint: String,
   cors: CorsSettings,
   mock: MockSettings,
   security: SecuritySettings,

@@ -1,21 +1,20 @@
 import React from 'react';
 import { NavLink } from 'react-router-dom';
 
-const NavBar = () => (
+import logo from './assets/logo-dark.png';
+
+export default () => (
   <div className="nav-container">
     <div>
-      <nav id="menu1" className="bar bar-1 hidden-xs">
+      <nav className="bar bar-1 hidden-xs">
         <div className="container">
           <div className="row">
             <div className="col-lg-1 hidden-xs col-md-3">
-              {/*}
               <div className="bar__module">
-                <a href="index.html">
-                  <img className="logo logo-dark" alt="logo" src="img/logo4.png" />
-                  <img className="logo logo-light" alt="logo" src="img/logo-light.png" />
+                <a href="/">
+                  <img className="logo" alt="logo" src={logo} style={{ maxHeight: '30px' }} />
                 </a>
               </div>
-              */}
             </div>
             <div className="col-lg-11 col-md-12 text-right text-left-xs text-left-sm">
               <div className="bar__module">
@@ -23,10 +22,8 @@ const NavBar = () => (
                   <span className="btn__text">Manage my mocks</span>
                 </NavLink>
 
-                <NavLink to="/create" className="btn btn--sm type--uppercase btn--primary">
-                  <span className="btn__text" data-tooltip="Tooltip text here">
-                    New mock
-                  </span>
+                <NavLink to="/design" className="btn btn--sm type--uppercase btn--primary">
+                  <span className="btn__text">New mock</span>
                 </NavLink>
               </div>
             </div>
@@ -36,5 +33,3 @@ const NavBar = () => (
     </div>
   </div>
 );
-
-export default NavBar;

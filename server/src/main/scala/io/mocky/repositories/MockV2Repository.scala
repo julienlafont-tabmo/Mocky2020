@@ -14,7 +14,7 @@ import io.mocky.models.Gate
 import io.mocky.models.admin.Stats
 import io.mocky.models.errors.MockNotFoundError
 import io.mocky.models.mocks.{ Mock, MockResponse }
-import io.mocky.utils.PostgresUtil
+import io.mocky.utils.DateUtil
 
 /**
   * Load legacy mocks from PG, that have been migrated from MongoDB
@@ -30,7 +30,7 @@ class MockV2Repository(transactor: Transactor[IO]) {
       fr"SELECT content, status, content_type, charset, headers FROM $TABLE WHERE id = $id"
 
     def UPDATE_STATS(id: String): Fragment =
-      fr"UPDATE $TABLE SET last_access_at = ${PostgresUtil.now}, total_access = total_access + 1 WHERE id = $id"
+      fr"UPDATE $TABLE SET last_access_at = ${DateUtil.now}, total_access = total_access + 1 WHERE id = $id"
 
     val ADMIN_STATS: Fragment =
       fr"""
